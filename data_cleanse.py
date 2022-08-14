@@ -29,7 +29,7 @@ def generate_data_files():
             species = species_class.rsplit(' ')[0]
             animal_class = ' '.join(species_class.rsplit(' ')[1:])
         else:
-            animal_class = 'Unkown'
+            animal_class = 'Unknown'
             species = species_class
 
         for image in images:
@@ -43,6 +43,7 @@ def generate_data_files():
     validation = image_reference_list[-int(len(image_reference_list) * 0.2):]
     testing = image_reference_list[-int(len(image_reference_list) * 0.2):]
 
+    # generated reference splits
     for dataset in [('training', training), ('validation', validation), ('testing', testing)]:
         ref_file_name = root_dir + '/' + dataset[0] + image_reference_file_suffix
         with open(ref_file_name, 'w', newline='') as csvfile:
