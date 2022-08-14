@@ -39,7 +39,7 @@ def generate_data_files():
     # shuffle then split
     seed = 1234
     random.Random(seed).shuffle(image_reference_list)
-    training = image_reference_list[:int(len(image_reference_list) * 0.05)]
+    training = image_reference_list[:int(len(image_reference_list) * 0.6)]
     validation = image_reference_list[-int(len(image_reference_list) * 0.2):]
     testing = image_reference_list[-int(len(image_reference_list) * 0.2):]
 

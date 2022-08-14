@@ -16,6 +16,7 @@ class WildTrackDataset(Dataset):
         self.patch_size = config['patch_size']
         self.stride = config['stride']
         images = pandas.read_csv(dataset_file,header=None,names=["image_dir","species","class","image_filename","rating"])
+        self.row_count = images.shape[0]
 
         # get rating
         self.mos = images["rating"].to_numpy()
