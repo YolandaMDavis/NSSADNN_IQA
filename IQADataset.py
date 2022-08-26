@@ -12,7 +12,9 @@ from brisque import brisque
 
 
 def gray_loader(path):
-    return Image.open(path).convert('L')
+    img = Image.open(path).convert('L')
+    img = img.resize((256,256))
+    return img
 
 def LocalNormalization(patch, P=7, Q=7, C=1):
     kernel = np.ones((P, Q)) / (P * Q)

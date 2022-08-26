@@ -36,7 +36,6 @@ class WildTrackDataset(Dataset):
 
             if status == 'train':
                 self.patches = self.patches + patches
-                print('Patch length is: ' + str(len(patches)))
                 for i in range(len(patches)):
                     self.label.append(self.mos[index])
                     self.features.append(features)
