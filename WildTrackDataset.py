@@ -5,6 +5,7 @@ import torch
 import IQADataset
 import pandas
 import cv2
+import numpy as np
 from torch.utils.data import Dataset
 
 from brisque import brisque
@@ -17,11 +18,11 @@ class WildTrackDataset(Dataset):
         self.stride = config['stride']
         images = pandas.read_csv(dataset_file,header=None,names=["image_dir","species","class","image_filename","rating"])
         self.row_count = images.shape[0]
+        categories = {'Bongo':0, 'Cheetah':1, 'Elephant':2, 'Jaguar':3, 'Leopard':4, 'Lion':5, 'Otter':6, 'Panda':7, 'Puma':8, 'Rhino':9, 'Tapir':10, 'Tiger':11}
 
         # get rating
         self.mos = images["rating"].to_numpy()
-
-        self.patches = ()
+        self.mos = np.select([(self.mos < 4), (self.mos >= 4)],[0,1])
         self.features = []
         self.label = []
 
@@ -32,20 +33,12 @@ class WildTrackDataset(Dataset):
             im_features = cv2.imread(file_path)
             im_features = cv2.cvtColor(im_features, cv2.COLOR_BGR2RGB)
             features = brisque(im_features)
-            patches = IQADataset.CropPatches(im, self.patch_size, self.stride)
-
-            if status == 'train':
-                self.patches = self.patches + patches
-                for i in range(len(patches)):
-                    self.label.append(self.mos[index])
-                    self.features.append(features)
-            else:
-                self.patches = self.patches + (torch.stack(patches),)
-                self.label.append(self.mos[index])
-                self.features.append([])
+            features = np.append(features, np.array([categories[row['species']]]))
+            self.label.append(self.mos[index])
+            self.features.append(features)
 
     def __len__(self):
-        return len(self.patches)
+        return len(self.features)
 
     def __getitem__(self, idx):
-        return self.patches[idx], (torch.Tensor([self.label[idx]]), self.features[idx])
+        return (torch.Tensor([self.label[idx]]), torch.Tensor(self.features[idx]))
