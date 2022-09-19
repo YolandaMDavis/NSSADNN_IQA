@@ -9,6 +9,9 @@ import numpy as np
 from torch.utils.data import Dataset
 
 from brisque import brisque
+from niqe import niqe
+from piqe import piqe
+
 
 class WildTrackDataset(Dataset):
 
@@ -32,10 +35,13 @@ class WildTrackDataset(Dataset):
             im = self.gray_loader(file_path)
             im_features = cv2.imread(file_path)
             im_features = cv2.cvtColor(im_features, cv2.COLOR_BGR2RGB)
-            features = brisque(im_features)
-            features = np.append(features, np.array([categories[row['species']]]))
+            brisque_features = brisque(im_features)
+            n_score = niqe(im_features)
+            p_score,_,_,_ = piqe(im_features)
+            other_scores = [n_score, p_score, categories[row['species']]]
+            full_features = np.append(brisque_features,np.array(other_scores))
             self.label.append(self.mos[index])
-            self.features.append(features)
+            self.features.append(full_features)
 
     def __len__(self):
         return len(self.features)
