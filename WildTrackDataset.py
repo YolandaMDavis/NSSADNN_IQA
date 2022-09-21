@@ -1,47 +1,30 @@
-import os
-
 import torch
-
-import IQADataset
 import pandas
-import cv2
 import numpy as np
 from torch.utils.data import Dataset
 
-from brisque import brisque
-from niqe import niqe
-from piqe import piqe
-
 
 class WildTrackDataset(Dataset):
+    categories = {'Bongo': 0, 'Cheetah': 1, 'Elephant': 2, 'Jaguar': 3, 'Leopard': 4, 'Lion': 5, 'Otter': 6, 'Panda': 7,
+                  'Puma': 8, 'Rhino': 9, 'Tapir': 10, 'Tiger': 11}
 
-    def __init__(self, dataset_file, config, status):
-        self.gray_loader = IQADataset.gray_loader
-        self.patch_size = config['patch_size']
-        self.stride = config['stride']
-        images = pandas.read_csv(dataset_file,header=None,names=["image_dir","species","class","image_filename","rating"])
+    def __init__(self, dataset_file, binary_threshold: 4):
+        images = pandas.read_csv(dataset_file)
+        brisque_columns = ['feature_' + str(i) for i in range(0, 36)]
+        feature_columns = brisque_columns + ['n_score', 'p_score', 'species']
+        image_features = images[feature_columns]
+        image_features['species'] = self.categories[images['species']]
         self.row_count = images.shape[0]
-        categories = {'Bongo':0, 'Cheetah':1, 'Elephant':2, 'Jaguar':3, 'Leopard':4, 'Lion':5, 'Otter':6, 'Panda':7, 'Puma':8, 'Rhino':9, 'Tapir':10, 'Tiger':11}
 
         # get rating
-        self.mos = images["rating"].to_numpy()
-        self.mos = np.select([(self.mos < 4), (self.mos >= 4)],[0,1])
+        self.mos = images["sub_score"].to_numpy()
+        self.mos = np.select([(self.mos < binary_threshold), (self.mos >= binary_threshold)],[0,1])
         self.features = []
         self.label = []
 
-        for index, row in images.iterrows():
-            print("Processing file number:" + str(index))
-            file_path = os.path.join(row['image_dir'], row['image_filename'])
-            im = self.gray_loader(file_path)
-            im_features = cv2.imread(file_path)
-            im_features = cv2.cvtColor(im_features, cv2.COLOR_BGR2RGB)
-            brisque_features = brisque(im_features)
-            n_score = niqe(im_features)
-            p_score,_,_,_ = piqe(im_features)
-            other_scores = [n_score, p_score, categories[row['species']]]
-            full_features = np.append(brisque_features,np.array(other_scores))
+        for index, row in image_features.iterrows():
+            self.features.append(row.to_numpy())
             self.label.append(self.mos[index])
-            self.features.append(full_features)
 
     def __len__(self):
         return len(self.features)
