@@ -13,11 +13,11 @@ class WildTrackDataset(Dataset):
         brisque_columns = ['feature_' + str(i) for i in range(0, 36)]
         feature_columns = brisque_columns + ['n_score', 'p_score', 'species']
         image_features = images[feature_columns]
-        image_features['species'] = self.categories[images['species']]
+        image_features['species'] = images['species'].apply(lambda x: self.categories[x])
         self.row_count = images.shape[0]
 
         # get rating
-        self.mos = images["sub_score"].to_numpy()
+        self.mos = images["subj_score"].to_numpy()
         self.mos = np.select([(self.mos < binary_threshold), (self.mos >= binary_threshold)],[0,1])
         self.features = []
         self.label = []
